@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Deny ALL client-side reads and writes.
+    // Every Firestore operation goes through Firebase Admin SDK on the server.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,7 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        // Strava athlete profile pictures
+        protocol: 'https',
+        hostname: 'dgalywyr863hv.cloudfront.net',
+      },
+      {
+        // Strava CDN (alternate)
+        protocol: 'https',
+        hostname: '*.cloudfront.net',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
