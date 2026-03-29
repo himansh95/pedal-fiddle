@@ -1,8 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Bike, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Bike, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import type { GearRule } from '@/lib/types';
+
+interface StravaGear {
+  id: string;
+  name: string;
+  nickname: string;
+  distance: number;
+  retired: boolean;
+}
 
 const ACTIVITY_TYPES = [
   'Ride',
@@ -53,10 +61,27 @@ function newRule(): GearRule {
 
 export default function GearRulesPage() {
   const [rules, setRules] = useState<GearRule[]>([]);
+  const [bikes, setBikes] = useState<StravaGear[]>([]);
+  const [bikesLoading, setBikesLoading] = useState(true);
+  const [bikesError, setBikesError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function loadBikes() {
+    setBikesLoading(true);
+    setBikesError(false);
+    try {
+      const res = await fetch('/api/strava/gear');
+      if (!res.ok) throw new Error('Failed');
+      setBikes(await res.json());
+    } catch {
+      setBikesError(true);
+    } finally {
+      setBikesLoading(false);
+    }
+  }
 
   useEffect(() => {
     fetch('/api/settings')
@@ -65,6 +90,7 @@ export default function GearRulesPage() {
         setRules(s.gearRules ?? []);
         setLoading(false);
       });
+    loadBikes();
   }, []);
 
   function updateRule(id: string, patch: Partial<GearRule>) {
@@ -131,13 +157,49 @@ export default function GearRulesPage() {
         </p>
       </div>
 
-      {/* How to find Gear ID */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 text-xs text-zinc-400 space-y-1">
-        <p className="font-semibold text-zinc-300">How to find your Strava Gear ID</p>
-        <p>
-          Go to <span className="text-orange-400">strava.com/settings/gear</span>, click on a bike,
-          and copy the ID from the URL — it looks like <code className="bg-zinc-800 px-1 rounded">b12345678</code>.
-        </p>
+      {/* Bikes from Strava */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-zinc-300">Your Strava Bikes</p>
+          <button
+            type="button"
+            onClick={loadBikes}
+            disabled={bikesLoading}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={11} className={bikesLoading ? 'animate-spin' : ''} /> Refresh
+          </button>
+        </div>
+
+        {bikesLoading && (
+          <p className="text-xs text-zinc-500 flex items-center gap-1.5">
+            <Loader2 size={11} className="animate-spin" /> Fetching bikes from Strava…
+          </p>
+        )}
+        {bikesError && (
+          <p className="text-xs text-red-400">Could not load bikes. Check your Strava connection.</p>
+        )}
+        {!bikesLoading && !bikesError && bikes.length === 0 && (
+          <p className="text-xs text-zinc-500">No bikes found on your Strava account.</p>
+        )}
+        {!bikesLoading && !bikesError && bikes.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {bikes.map((b) => (
+              <div
+                key={b.id}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  b.retired
+                    ? 'border-zinc-800 text-zinc-600'
+                    : 'border-zinc-700 text-zinc-300'
+                }`}
+              >
+                <span className="font-medium">{b.name || b.nickname}</span>
+                <span className="ml-1.5 font-mono text-zinc-500">{b.id}</span>
+                {b.retired && <span className="ml-1.5 text-zinc-600">(retired)</span>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -186,14 +248,36 @@ export default function GearRulesPage() {
 
               {/* Gear ID */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-400">Strava Gear ID</label>
-                <input
-                  type="text"
-                  value={rule.gearId}
-                  onChange={(e) => updateRule(rule.id, { gearId: e.target.value.trim() })}
-                  placeholder="e.g. b12345678"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none font-mono"
-                />
+                <label className="text-xs font-medium text-zinc-400">Bike</label>
+                {bikes.length > 0 ? (
+                  <select
+                    value={rule.gearId}
+                    onChange={(e) => {
+                      const selected = bikes.find((b) => b.id === e.target.value);
+                      updateRule(rule.id, {
+                        gearId: e.target.value,
+                        label: rule.label || (selected ? (selected.name || selected.nickname) : ''),
+                      });
+                    }}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none"
+                  >
+                    <option value="">— select a bike —</option>
+                    {bikes.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name || b.nickname} ({b.id})
+                        {b.retired ? ' [retired]' : ''}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={rule.gearId}
+                    onChange={(e) => updateRule(rule.id, { gearId: e.target.value.trim() })}
+                    placeholder="e.g. b12345678"
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none font-mono"
+                  />
+                )}
               </div>
 
               {/* Location city */}

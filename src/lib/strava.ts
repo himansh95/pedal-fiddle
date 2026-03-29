@@ -114,3 +114,26 @@ export async function fetchAthlete(
   );
   return response.data;
 }
+
+export interface StravaGear {
+  id: string;
+  name: string;
+  nickname: string;
+  distance: number; // metres
+  retired: boolean;
+}
+
+/**
+ * Fetches all bikes registered on the athlete's Strava account.
+ * The full athlete profile includes a `bikes` array.
+ */
+export async function fetchAthleteGear(accessToken: string): Promise<StravaGear[]> {
+  const response = await withRetry(() =>
+    axios
+      .get<{ bikes: StravaGear[] }>(`${STRAVA_API_BASE}/athlete`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      .catch(handleAxiosError),
+  );
+  return response.data.bikes ?? [];
+}
