@@ -25,8 +25,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-10 shadow-2xl">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-zinc-800/60 bg-zinc-900/60 backdrop-blur-sm p-10 shadow-2xl shadow-black/50">
         {/* Logo / wordmark */}
         <div className="mb-8 flex flex-col items-center gap-2">
           <span className="text-4xl">🚴</span>
