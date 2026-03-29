@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import {
   Activity,
+  Bike,
   Bot,
   ChevronRight,
   EyeOff,
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
   { href: '/dashboard/ai', label: 'AI Config', icon: Bot },
   { href: '/dashboard/rules', label: 'Hide Rules', icon: EyeOff },
+  { href: '/dashboard/gear', label: 'Gear Rules', icon: Bike },
   { href: '/dashboard/logs', label: 'Activity Logs', icon: Activity },
   { href: '/dashboard/strava', label: 'Strava', icon: Zap },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },

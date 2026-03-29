@@ -36,3 +36,6 @@ export const DEFAULT_HIDE_RULES = [
   { activityType: 'VirtualRun', enabled: true, distanceThresholdKm: 2 },
   { activityType: 'TrailRun', enabled: true, distanceThresholdKm: 2 },
 ];
+
+// Default gear rules — empty by default, user configures their own
+export const DEFAULT_GEAR_RULES: import('./types').GearRule[] = [];

@@ -18,6 +18,17 @@ export interface HideRule {
   distanceThresholdKm: number;
 }
 
+export interface GearRule {
+  id: string; // unique rule id (uuid)
+  enabled: boolean;
+  label: string; // friendly name, e.g. "Bhopal Bike"
+  gearId: string; // Strava gear id, e.g. "b12345678"
+  /** Match by location city substring (case-insensitive). e.g. "bhopal" */
+  locationCity: string;
+  /** Optional: restrict to specific activity types. Empty = all types. */
+  activityTypes: string[];
+}
+
 export interface PerActivityTypeOverride {
   tone?: string;
   namePromptTemplate?: string;
@@ -36,6 +47,7 @@ export interface SettingsDoc {
   descriptionPromptTemplate: string;
   perActivityTypeOverrides: Record<string, PerActivityTypeOverride>;
   hideRules: HideRule[];
+  gearRules: GearRule[];
   updatedAt: Timestamp;
 }
 
@@ -43,6 +55,8 @@ export interface ActivityActionsApplied {
   aiName?: string;
   aiDescription?: string;
   hiddenFromHomeFeed?: boolean;
+  gearId?: string;
+  gearLabel?: string;
 }
 
 export interface ActivityLogDoc {

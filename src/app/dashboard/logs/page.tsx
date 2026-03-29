@@ -78,6 +78,14 @@ function LogDetail({ log, onClose }: { log: LogWithId; onClose: () => void }) {
             {log.actionsApplied?.hiddenFromHomeFeed !== undefined && (
               <p><span className="text-zinc-500">Hidden from feed:</span> {log.actionsApplied.hiddenFromHomeFeed ? 'Yes' : 'No'}</p>
             )}
+            {log.actionsApplied?.gearId && (
+              <p>
+                <span className="text-zinc-500">Gear assigned:</span>{' '}
+                {log.actionsApplied.gearLabel
+                  ? `${log.actionsApplied.gearLabel} (${log.actionsApplied.gearId})`
+                  : log.actionsApplied.gearId}
+              </p>
+            )}
             {Object.keys(log.actionsApplied ?? {}).length === 0 && (
               <p className="text-zinc-500">None</p>
             )}

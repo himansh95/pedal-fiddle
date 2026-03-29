@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase-admin/firestore';
 import { db } from '@/lib/firebase';
-import { DEFAULT_DESCRIPTION_PROMPT, DEFAULT_HIDE_RULES, DEFAULT_NAME_PROMPT } from '@/lib/defaults';
+import { DEFAULT_DESCRIPTION_PROMPT, DEFAULT_GEAR_RULES, DEFAULT_HIDE_RULES, DEFAULT_NAME_PROMPT } from '@/lib/defaults';
 import type { SettingsDoc } from '@/lib/types';
 
 const col = () => db.collection('settings');
@@ -48,6 +48,7 @@ export async function seedDefaultSettings(userId: string): Promise<void> {
     descriptionPromptTemplate: DEFAULT_DESCRIPTION_PROMPT,
     perActivityTypeOverrides: {},
     hideRules: DEFAULT_HIDE_RULES,
+    gearRules: DEFAULT_GEAR_RULES,
     updatedAt: Timestamp.now(),
   };
 

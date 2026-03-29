@@ -34,6 +34,15 @@ const HideRuleSchema = z.object({
   distanceThresholdKm: z.number().positive(),
 });
 
+const GearRuleSchema = z.object({
+  id: z.string(),
+  enabled: z.boolean(),
+  label: z.string(),
+  gearId: z.string(),
+  locationCity: z.string(),
+  activityTypes: z.array(z.string()),
+});
+
 const SettingsSchema = z.object({
   processingEnabled: z.boolean().optional(),
   aiNameEnabled: z.boolean().optional(),
@@ -50,6 +59,7 @@ const SettingsSchema = z.object({
     descriptionPromptTemplate: z.string().optional(),
   })).optional(),
   hideRules: z.array(HideRuleSchema).optional(),
+  gearRules: z.array(GearRuleSchema).optional(),
 });
 
 export async function PUT(req: NextRequest): Promise<Response> {

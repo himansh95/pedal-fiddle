@@ -92,7 +92,7 @@ export async function fetchActivity(
 export async function patchActivity(
   activityId: string | number,
   accessToken: string,
-  payload: { name?: string; description?: string; hide_from_home?: boolean; [key: string]: unknown },
+  payload: { name?: string; description?: string; hide_from_home?: boolean; gear_id?: string; [key: string]: unknown },
 ): Promise<void> {
   await withRetry(() =>
     axios.put(`${STRAVA_API_BASE}/activities/${activityId}`, payload, {
