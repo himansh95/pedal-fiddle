@@ -5,6 +5,7 @@ import { writeActivityLog } from '@/lib/db/activityLogs';
 import { getSettings } from '@/lib/db/settings';
 import { fetchActivity, getValidAccessToken, patchActivity } from '@/lib/strava';
 import type { ActivityLogDoc, GearRule, SettingsDoc, StravaActivity } from '@/lib/types';
+import { reverseGeocode } from '@/lib/utils/geocode';
 
 // ─── Step 3: Hide from home feed rules ───────────────────────────────────────
 
@@ -22,22 +23,34 @@ function shouldHide(activity: StravaActivity, settings: SettingsDoc): boolean {
 // ─── Step 3b: Gear assignment ─────────────────────────────────────────────────
 
 /**
- * Returns the first matching gear rule for an activity, or null if none match.
- * Matching is based on:
- *  1. Rule is enabled
- *  2. Activity's location_city contains the rule's locationCity (case-insensitive)
- *  3. If activityTypes is non-empty, the activity type must be in the list
+ * Resolves the best city string for gear matching.
+ * Strava's location_city is often null — fall back to reverse geocoding
+ * the start_latlng coordinates via Nominatim (free, no API key needed).
  */
-function resolveGearRule(activity: StravaActivity, settings: SettingsDoc): GearRule | null {
+async function resolveCity(activity: StravaActivity): Promise<string> {
+  if (activity.location_city) return activity.location_city;
+
+  const [lat, lng] = activity.start_latlng ?? [];
+  if (lat == null || lng == null) return '';
+
+  const geocoded = await reverseGeocode(lat, lng);
+  console.log(`[pipeline] location_city absent — geocoded (${lat},${lng}) → "${geocoded}"`);
+  return geocoded ?? '';
+}
+
+/**
+ * Returns the first matching gear rule for an activity, or null if none match.
+ */
+function resolveGearRule(city: string, activity: StravaActivity, settings: SettingsDoc): GearRule | null {
   if (!settings.gearRules?.length) return null;
 
-  const city = (activity.location_city ?? '').toLowerCase();
+  const cityLower = city.toLowerCase();
   const type = activity.sport_type ?? activity.type;
 
   return (
     settings.gearRules.find((rule) => {
       if (!rule.enabled) return false;
-      if (!city.includes(rule.locationCity.toLowerCase())) return false;
+      if (!cityLower.includes(rule.locationCity.toLowerCase())) return false;
       if (rule.activityTypes.length > 0 && !rule.activityTypes.includes(type)) return false;
       return true;
     }) ?? null
@@ -121,12 +134,16 @@ export async function processActivity(
     }
 
     // ── Step 3b: Gear assignment ─────────────────────────────────────────────
-    const gearRule = resolveGearRule(activity, settings);
+    const city = await resolveCity(activity);
+    logEntry.locationResolved = city || undefined;
+    const gearRule = resolveGearRule(city, activity, settings);
     if (gearRule) {
       patch.gear_id = gearRule.gearId;
       actionsApplied.gearId = gearRule.gearId;
       actionsApplied.gearLabel = gearRule.label;
-      console.log(`[pipeline] Gear rule matched: "${gearRule.label}" (${gearRule.gearId}) for city "${activity.location_city}"`);
+      console.log(`[pipeline] Gear rule matched: "${gearRule.label}" (${gearRule.gearId}) for city "${city}"`);
+    } else {
+      console.log(`[pipeline] No gear rule matched for city "${city}" (activity: ${activityId})`);
     }
 
     const tone = getTone(activity, settings);

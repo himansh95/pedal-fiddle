@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
   <!-- bicycle top-left -->
-  <g transform="translate(10,16) rotate(-8,28,22)" opacity="0.5" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(10,16) rotate(-8,28,22)" opacity="0.35" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <!-- wheels -->
     <circle cx="16" cy="22" r="9"/>
     <circle cx="46" cy="22" r="9"/>
@@ -19,25 +19,25 @@
   </g>
 
   <!-- route squiggle with waypoints top-right -->
-  <g transform="translate(92,12) rotate(12,30,14)" opacity="0.5" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round">
+  <g transform="translate(92,12) rotate(12,30,14)" opacity="0.35" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round">
     <path d="M0,18 C8,4 22,30 32,14 C42,0 52,22 60,10"/>
     <circle cx="0" cy="18" r="2.5" fill="#FC4C02"/>
     <circle cx="60" cy="10" r="2.5" fill="#FC4C02"/>
   </g>
 
   <!-- heart-rate / activity pulse centre -->
-  <g transform="translate(50,70) rotate(-6,22,12)" opacity="0.5" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(50,70) rotate(-6,22,12)" opacity="0.35" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="0,12 12,12 16,2 20,22 24,6 28,12 44,12"/>
   </g>
 
   <!-- map pin bottom-right -->
-  <g transform="translate(108,96) rotate(15,14,17)" opacity="0.5" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(108,96) rotate(15,14,17)" opacity="0.35" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M14,0 C7,0 1,6 1,13 C1,22 14,34 14,34 C14,34 27,22 27,13 C27,6 21,0 14,0 Z"/>
     <circle cx="14" cy="13" r="4.5"/>
   </g>
 
   <!-- strava logo bottom-left -->
-  <g transform="translate(10,92) rotate(-18,18,28)" opacity="0.5" fill="#FC4C02" stroke="none">
+  <g transform="translate(10,92) rotate(-18,18,28)" opacity="0.35" fill="#FC4C02" stroke="none">
     <g transform="scale(2)">
       <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116z"/>
       <path d="M11.379 7.956l2.084 4.1h3.066L11.379 2 6.229 12.056h3.066l2.084-4.1z"/>
@@ -46,7 +46,7 @@
 
   <!-- running shoe (mid-right area) -->
   <!-- source viewBox: 0 0 512 512, scaled to ~50px wide: scale = 50/512 ≈ 0.0977 -->
-  <g transform="translate(165,32) rotate(8,25,20)" opacity="0.5" fill="#FC4C02" stroke="none">
+  <g transform="translate(165,32) rotate(8,25,20)" opacity="0.35" fill="#FC4C02" stroke="none">
     <g transform="scale(0.0977)">
       <path d="M264.144,416.889L14.642,205.12L0,222.38l249.532,211.798l0.034,0.03
         c28.365,23.868,64.366,37.003,101.443,37.01h159.922v-22.638H351.01C319.292,448.581,288.402,437.322,264.144,416.889z"/>
@@ -77,7 +77,7 @@
   </g>
 
   <!-- smartwatch (mid-left area) -->
-  <g transform="translate(18,168) rotate(-12,16,24)" opacity="0.5" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(18,168) rotate(-12,16,24)" opacity="0.35" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <!-- strap top (two parallel lines) -->
     <line x1="10" y1="0" x2="10" y2="8"/>
     <line x1="22" y1="0" x2="22" y2="8"/>
@@ -97,7 +97,7 @@
   </g>
 
   <!-- swimming / open water (bottom-right area) -->
-  <g transform="translate(175,170) rotate(6,30,10)" opacity="0.5" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(175,170) rotate(6,30,10)" opacity="0.35" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <!-- wave 1 -->
     <path d="M0,8 C6,2 12,14 18,8 C24,2 30,14 36,8 C42,2 48,14 54,8"/>
     <!-- wave 2 -->
@@ -105,7 +105,7 @@
   </g>
 
   <!-- mountain / MTB terrain (bottom-centre) -->
-  <g transform="translate(90,160) rotate(12,34,28)" opacity="0.5" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(90,160) rotate(12,34,28)" opacity="0.35" fill="none" stroke="#FC4C02" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <!-- left large peak -->
     <polyline points="0,48 24,4 48,48"/>
     <!-- right smaller peak overlapping -->

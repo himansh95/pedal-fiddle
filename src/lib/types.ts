@@ -73,6 +73,8 @@ export interface ActivityLogDoc {
   status: 'success' | 'failed' | 'skipped';
   errorMessage?: string;
   processedAt: Timestamp;
+  /** City resolved for gear matching (may come from Strava or reverse geocoding) */
+  locationResolved?: string;
 }
 
 // ─── Strava API shapes ────────────────────────────────────────────────────────

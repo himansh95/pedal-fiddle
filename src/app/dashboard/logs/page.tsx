@@ -86,6 +86,9 @@ function LogDetail({ log, onClose }: { log: LogWithId; onClose: () => void }) {
                   : log.actionsApplied.gearId}
               </p>
             )}
+            {log.locationResolved && (
+              <p><span className="text-zinc-500">Location resolved:</span> {log.locationResolved}</p>
+            )}
             {Object.keys(log.actionsApplied ?? {}).length === 0 && (
               <p className="text-zinc-500">None</p>
             )}
