@@ -26,11 +26,33 @@ function shouldHide(activity: StravaActivity, settings: SettingsDoc): boolean {
  * Resolves the best city string for gear matching.
  * Strava's location_city is often null — fall back to reverse geocoding
  * the start_latlng coordinates via Nominatim (free, no API key needed).
+ *
+ * NOTE: Strava sometimes fires the webhook before the activity is fully
+ * processed on their end, so start_latlng may be empty on the first fetch.
+ * We re-fetch once after a short delay if coordinates are missing.
  */
-async function resolveCity(activity: StravaActivity): Promise<string> {
+async function resolveCity(
+  activity: StravaActivity,
+  accessToken: string,
+): Promise<string> {
   if (activity.location_city) return activity.location_city;
 
-  const [lat, lng] = activity.start_latlng ?? [];
+  let coords = activity.start_latlng;
+
+  // If coordinates are missing, wait and re-fetch the activity once
+  if (!coords?.length) {
+    console.log(`[pipeline] start_latlng missing for activity ${activity.id} — retrying after 5s`);
+    await new Promise((r) => setTimeout(r, 5000));
+    try {
+      const refreshed = await fetchActivity(activity.id, accessToken);
+      coords = refreshed.start_latlng;
+      if (refreshed.location_city) return refreshed.location_city;
+    } catch (err) {
+      console.warn('[pipeline] re-fetch for coordinates failed:', err);
+    }
+  }
+
+  const [lat, lng] = coords ?? [];
   if (lat == null || lng == null) return '';
 
   const geocoded = await reverseGeocode(lat, lng);
@@ -134,7 +156,7 @@ export async function processActivity(
     }
 
     // ── Step 3b: Gear assignment ─────────────────────────────────────────────
-    const city = await resolveCity(activity);
+    const city = await resolveCity(activity, accessToken);
     logEntry.locationResolved = city || undefined;
     const gearRule = resolveGearRule(city, activity, settings);
     if (gearRule) {
@@ -193,8 +215,19 @@ export async function processActivity(
     console.error('[pipeline] processActivity error:', err);
     logEntry.status = 'failed';
     logEntry.errorMessage = err instanceof Error ? err.message : String(err);
+
+    // Ensure required fields are always present so Firestore write never fails
+    // due to undefined values (Firestore rejects undefined).
+    logEntry.activityName ??= '';
+    logEntry.activityType ??= '';
+    logEntry.distanceMeters ??= 0;
+    logEntry.startDate ??= Timestamp.now();
   }
 
   // ── Step 7: Log result ────────────────────────────────────────────────────
-  await writeActivityLog(logEntry as Omit<ActivityLogDoc, 'processedAt'>);
+  try {
+    await writeActivityLog(logEntry as Omit<ActivityLogDoc, 'processedAt'>);
+  } catch (err) {
+    console.error('[pipeline] writeActivityLog failed:', err);
+  }
 }
