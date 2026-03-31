@@ -104,7 +104,7 @@ export default function HideRulesPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto space-y-8">
+    <div className="p-4 sm:p-8 max-w-3xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           <EyeOff size={22} /> Hide Rules
@@ -155,8 +155,8 @@ export default function HideRulesPage() {
           </button>
         </div>
 
-        {/* Header row */}
-        <div className="grid grid-cols-[1fr_160px_60px_32px] gap-3 px-5 py-2 text-xs font-medium text-zinc-500 border-b border-zinc-800">
+        {/* Header row — hidden on mobile, shown on sm+ */}
+        <div className="hidden sm:grid grid-cols-[1fr_160px_60px_32px] gap-3 px-5 py-2 text-xs font-medium text-zinc-500 border-b border-zinc-800">
           <span>Activity type</span>
           <span>Hide if under (km)</span>
           <span>Enabled</span>
@@ -165,40 +165,82 @@ export default function HideRulesPage() {
 
         <div className="divide-y divide-zinc-800">
           {rules.map((rule, i) => (
-            <div key={i} className="grid grid-cols-[1fr_160px_60px_32px] gap-3 items-center px-5 py-3">
-              <select
-                value={rule.activityType}
-                onChange={(e) => updateRule(i, { activityType: e.target.value })}
-                className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-white focus:border-orange-500 focus:outline-none"
-              >
-                {ACTIVITY_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                min={0.1}
-                step={0.5}
-                value={rule.distanceThresholdKm}
-                onChange={(e) => updateRule(i, { distanceThresholdKm: parseFloat(e.target.value) || 0 })}
-                className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-white focus:border-orange-500 focus:outline-none w-full"
-              />
-
-              <div className="flex justify-center">
-                <Toggle
-                  checked={rule.enabled}
-                  onChange={(v) => updateRule(i, { enabled: v })}
-                />
+            <div key={i} className="px-5 py-3">
+              {/* Mobile layout: stacked card */}
+              <div className="flex flex-col gap-2 sm:hidden">
+                <div className="flex items-center justify-between gap-2">
+                  <select
+                    value={rule.activityType}
+                    onChange={(e) => updateRule(i, { activityType: e.target.value })}
+                    className="flex-1 min-w-0 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-white focus:border-orange-500 focus:outline-none"
+                  >
+                    {ACTIVITY_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeRule(i)}
+                    className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-xs text-zinc-500 shrink-0">Hide if under (km)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={0.1}
+                      step={0.5}
+                      value={rule.distanceThresholdKm}
+                      onChange={(e) => updateRule(i, { distanceThresholdKm: parseFloat(e.target.value) || 0 })}
+                      className="w-24 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-white focus:border-orange-500 focus:outline-none"
+                    />
+                    <Toggle
+                      checked={rule.enabled}
+                      onChange={(v) => updateRule(i, { enabled: v })}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => removeRule(i)}
-                className="text-zinc-600 hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={15} />
-              </button>
+              {/* Desktop layout: grid row */}
+              <div className="hidden sm:grid grid-cols-[1fr_160px_60px_32px] gap-3 items-center">
+                <select
+                  value={rule.activityType}
+                  onChange={(e) => updateRule(i, { activityType: e.target.value })}
+                  className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-white focus:border-orange-500 focus:outline-none"
+                >
+                  {ACTIVITY_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  min={0.1}
+                  step={0.5}
+                  value={rule.distanceThresholdKm}
+                  onChange={(e) => updateRule(i, { distanceThresholdKm: parseFloat(e.target.value) || 0 })}
+                  className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-white focus:border-orange-500 focus:outline-none w-full"
+                />
+
+                <div className="flex justify-center">
+                  <Toggle
+                    checked={rule.enabled}
+                    onChange={(v) => updateRule(i, { enabled: v })}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeRule(i)}
+                  className="text-zinc-600 hover:text-red-400 transition-colors"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
