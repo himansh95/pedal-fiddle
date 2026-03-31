@@ -168,7 +168,7 @@ export default function HideRulesPage() {
             <div key={i} className="px-5 py-3">
               {/* Mobile layout: stacked card */}
               <div className="flex flex-col gap-2 sm:hidden">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
                   <select
                     value={rule.activityType}
                     onChange={(e) => updateRule(i, { activityType: e.target.value })}
@@ -178,13 +178,6 @@ export default function HideRulesPage() {
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
-                  <button
-                    type="button"
-                    onClick={() => removeRule(i)}
-                    className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 size={15} />
-                  </button>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <label className="text-xs text-zinc-500 shrink-0">Hide if under (km)</label>
@@ -201,6 +194,13 @@ export default function HideRulesPage() {
                       checked={rule.enabled}
                       onChange={(v) => updateRule(i, { enabled: v })}
                     />
+                    <button
+                      type="button"
+                      onClick={() => removeRule(i)}
+                      className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
               </div>
