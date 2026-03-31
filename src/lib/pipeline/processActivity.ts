@@ -158,7 +158,7 @@ export async function processActivity(
 
     // ── Step 3b: Gear assignment ─────────────────────────────────────────────
     const city = await resolveCity(activity, accessToken);
-    logEntry.locationResolved = city || undefined;
+    if (city) logEntry.locationResolved = city;
     const gearRule = resolveGearRule(city, activity, settings);
     if (gearRule) {
       patch.gear_id = gearRule.gearId;
