@@ -12,11 +12,28 @@ function initFirebase() {
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  // The private key is stored with literal \n in env vars (Vercel / .env.local).
+  // We normalise both "\\n" (double-escaped) and "\n" (single) → real newlines.
+  const rawKey = process.env.FIREBASE_PRIVATE_KEY ?? '';
+  const privateKey = rawKey.includes('\\n')
+    ? rawKey.replace(/\\n/g, '\n')
+    : rawKey;
 
   if (!projectId || !clientEmail || !privateKey) {
+    const missing = [
+      !projectId && 'FIREBASE_PROJECT_ID',
+      !clientEmail && 'FIREBASE_CLIENT_EMAIL',
+      !privateKey && 'FIREBASE_PRIVATE_KEY',
+    ].filter(Boolean).join(', ');
+    throw new Error(`Firebase Admin: missing env vars: ${missing}`);
+  }
+
+  if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
     throw new Error(
-      'Missing Firebase environment variables. Check FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY.',
+      'Firebase Admin: FIREBASE_PRIVATE_KEY appears malformed — ' +
+      'make sure it starts with "-----BEGIN PRIVATE KEY-----" after newline expansion. ' +
+      'In .env.local wrap the value in double quotes and use \\n for newlines.',
     );
   }
 
@@ -25,6 +42,12 @@ function initFirebase() {
   });
 }
 
-initFirebase();
+try {
+  initFirebase();
+} catch (err) {
+  // Surface the error clearly instead of letting it appear as a cryptic 500
+  console.error('[firebase] Admin SDK init failed:', err);
+  throw err;
+}
 
 export const db = getFirestore();
