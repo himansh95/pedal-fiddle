@@ -39,10 +39,11 @@ async function resolveCity(
 
   let coords = activity.start_latlng;
 
-  // If coordinates are missing, wait and re-fetch the activity once
+  // If coordinates are missing, re-fetch the activity once.
+  // By the time we reach this step, auth + settings fetches have already
+  // taken a few seconds — enough for Strava to finish processing the GPS track.
   if (!coords?.length) {
-    console.log(`[pipeline] start_latlng missing for activity ${activity.id} — retrying after 5s`);
-    await new Promise((r) => setTimeout(r, 5000));
+    console.log(`[pipeline] start_latlng missing for activity ${activity.id} — re-fetching`);
     try {
       const refreshed = await fetchActivity(activity.id, accessToken);
       coords = refreshed.start_latlng;
