@@ -47,6 +47,8 @@ async function resolveCity(
     try {
       const refreshed = await fetchActivity(activity.id, accessToken);
       coords = refreshed.start_latlng;
+      console.log(`[pipeline] re-fetch got start_latlng: ${coords ? `(${coords[0]},${coords[1]})` : 'still missing'}`);
+      console.log(`[pipeline] re-fetch got location_city: "${refreshed.location_city ?? 'null'}"`);
       if (refreshed.location_city) return refreshed.location_city;
     } catch (err) {
       console.warn('[pipeline] re-fetch for coordinates failed:', err);
