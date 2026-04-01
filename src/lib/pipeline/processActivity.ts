@@ -6,6 +6,7 @@ import { getSettings } from '@/lib/db/settings';
 import { fetchActivity, getValidAccessToken, patchActivity } from '@/lib/strava';
 import type { ActivityLogDoc, GearRule, SettingsDoc, StravaActivity } from '@/lib/types';
 import { reverseGeocode } from '@/lib/utils/geocode';
+import { sleep } from '@/lib/utils/retry';
 
 // ─── Step 3: Hide from home feed rules ───────────────────────────────────────
 
@@ -39,19 +40,30 @@ async function resolveCity(
 
   let coords = activity.start_latlng;
 
-  // If coordinates are missing, re-fetch the activity once.
-  // By the time we reach this step, auth + settings fetches have already
-  // taken a few seconds — enough for Strava to finish processing the GPS track.
-  if (!coords?.length) {
-    console.log(`[pipeline] start_latlng missing for activity ${activity.id} — re-fetching`);
-    try {
-      const refreshed = await fetchActivity(activity.id, accessToken);
-      coords = refreshed.start_latlng;
-      console.log(`[pipeline] re-fetch got start_latlng: ${coords ? `(${coords[0]},${coords[1]})` : 'still missing'}`);
-      console.log(`[pipeline] re-fetch got location_city: "${refreshed.location_city ?? 'null'}"`);
-      if (refreshed.location_city) return refreshed.location_city;
-    } catch (err) {
-      console.warn('[pipeline] re-fetch for coordinates failed:', err);
+  // If coordinates are missing, retry re-fetching up to 3 times with increasing
+  // delays. Strava fires the webhook before the GPS track is fully processed,
+  // so start_latlng is often absent on the first (and sometimes second) fetch.
+  if (!coords?.length || coords[0] == null) {
+    const RETRY_DELAYS_MS = [3_000, 8_000, 15_000];
+    for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
+      console.log(
+        `[pipeline] start_latlng missing for activity ${activity.id} — waiting ${RETRY_DELAYS_MS[attempt]}ms then re-fetching (attempt ${attempt + 1}/${RETRY_DELAYS_MS.length})`,
+      );
+      await sleep(RETRY_DELAYS_MS[attempt]);
+      try {
+        const refreshed = await fetchActivity(activity.id, accessToken);
+        console.log(
+          `[pipeline] re-fetch got start_latlng: ${refreshed.start_latlng?.length ? `(${refreshed.start_latlng[0]},${refreshed.start_latlng[1]})` : 'still missing'}`,
+        );
+        console.log(`[pipeline] re-fetch got location_city: "${refreshed.location_city ?? 'null'}"`);
+        if (refreshed.location_city) return refreshed.location_city;
+        if (refreshed.start_latlng?.length && refreshed.start_latlng[0] != null) {
+          coords = refreshed.start_latlng;
+          break;
+        }
+      } catch (err) {
+        console.warn(`[pipeline] re-fetch attempt ${attempt + 1} failed:`, err);
+      }
     }
   }
 
