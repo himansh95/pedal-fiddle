@@ -15,7 +15,7 @@ interface Settings {
   descriptionPromptTemplate: string;
 }
 
-const TONES = ['motivational', 'humorous', 'poetic', 'technical', 'casual'];
+const TONES = ['motivational', 'humorous', 'poetic', 'technical', 'casual', 'roast'];
 
 function Toggle({
   checked,
