@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase-admin/firestore';
 import { callAI } from '@/lib/ai';
 import { resolvePrompt } from '@/lib/ai/resolvePrompt';
-import { writeActivityLog } from '@/lib/db/activityLogs';
+import { getRecentAiNames, writeActivityLog } from '@/lib/db/activityLogs';
 import { getSettings } from '@/lib/db/settings';
 import { fetchActivity, getValidAccessToken, patchActivity } from '@/lib/strava';
 import type { ActivityLogDoc, GearRule, SettingsDoc, StravaActivity } from '@/lib/types';
@@ -117,6 +117,21 @@ function getDescTemplate(activity: StravaActivity, settings: SettingsDoc): strin
   );
 }
 
+/**
+ * Routine activities (commutes, daily runs) produce near-identical stats, so the
+ * model tends to emit the same name. Listing recent names forces variation.
+ */
+function avoidRecentNames(prompt: string, recentNames: string[]): string {
+  if (!recentNames.length) return prompt;
+  const list = recentNames.map((n) => `- ${n}`).join('\n');
+  return `${prompt}
+
+These names were already used for recent similar activities:
+${list}
+
+Do not reuse any of them, and avoid their wording, structure, and imagery — take a noticeably different angle. Respond with only the new activity name, nothing else.`;
+}
+
 // ─── Main pipeline ────────────────────────────────────────────────────────────
 
 export async function processActivity(
@@ -188,7 +203,14 @@ export async function processActivity(
     // ── Step 4: AI name ──────────────────────────────────────────────────────
     if (settings.aiNameEnabled) {
       try {
-        const namePrompt = resolvePrompt(getNameTemplate(activity, settings), activity, tone);
+        const recentNames = await getRecentAiNames(
+          userId,
+          activity.sport_type ?? activity.type,
+        );
+        const namePrompt = avoidRecentNames(
+          resolvePrompt(getNameTemplate(activity, settings), activity, tone),
+          recentNames,
+        );
         prompts.push(`[NAME]\n${namePrompt}`);
         const aiName = await callAI(namePrompt, settings);
         patch.name = aiName;

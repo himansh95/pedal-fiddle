@@ -70,3 +70,31 @@ export async function getActivityLog(
   if (!snap.exists) return null;
   return { id: snap.id, ...(snap.data() as ActivityLogDoc) };
 }
+
+/**
+ * Recent AI-generated names for one activity type, newest first.
+ * Scans the latest logs and filters in memory to reuse the existing
+ * userId + processedAt index.
+ */
+export async function getRecentAiNames(
+  userId: string,
+  activityType: string,
+  limit = 10,
+  scan = 60,
+): Promise<string[]> {
+  const snap = await col()
+    .where('userId', '==', userId)
+    .orderBy('processedAt', 'desc')
+    .limit(scan)
+    .get();
+
+  const names: string[] = [];
+  for (const doc of snap.docs) {
+    const log = doc.data() as ActivityLogDoc;
+    if (log.activityType !== activityType) continue;
+    const name = log.actionsApplied?.aiName?.trim();
+    if (name && !names.includes(name)) names.push(name);
+    if (names.length >= limit) break;
+  }
+  return names;
+}
