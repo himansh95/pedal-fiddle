@@ -2,7 +2,7 @@ import axios from 'axios';
 import { NonRetryableError, withRetry } from '@/lib/utils/retry';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = 'openai/gpt-oss-120b';
 
 /**
  * Calls the Groq API and returns the generated text.
@@ -18,8 +18,9 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
           {
             model: MODEL,
             messages: [{ role: 'user', content: prompt }],
-            max_tokens: 256,
+            max_completion_tokens: 512,
             temperature: 0.8,
+            reasoning_effort: 'low',
           },
           {
             headers: {
@@ -31,7 +32,7 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
         .catch((err) => {
           if (axios.isAxiosError(err) && err.response) {
             const { status, data } = err.response;
-            if (status === 400 || status === 401 || status === 403) {
+            if (status === 400 || status === 401 || status === 403 || status === 404) {
               throw new NonRetryableError(
                 `Groq ${status}: ${data?.error?.message ?? JSON.stringify(data)}`,
                 err,
@@ -46,5 +47,10 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
     { maxAttempts: 4, initialDelayMs: 2000, factor: 2 },
   );
 
-  return response.data.choices[0].message.content.trim();
+  const content: string | undefined = response.data.choices?.[0]?.message?.content;
+  if (!content?.trim()) {
+    throw new Error('Groq returned no text output.');
+  }
+
+  return content.trim();
 }

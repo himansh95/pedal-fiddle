@@ -99,28 +99,39 @@ export default function AIConfigPage() {
     setPreviewLoading(true);
     setPreviewError('');
     setPreviewOutput(null);
-    const res = await fetch('/api/ai/preview', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: previewType,
-        template:
-          previewType === 'name'
-            ? settings?.namePromptTemplate
-            : settings?.descriptionPromptTemplate,
-        tone: settings?.defaultTone,
-      }),
-    });
-    const data = await res.json();
-    setPreviewLoading(false);
-    if (!res.ok) {
-      const raw: string = data.error ?? 'Preview failed';
-      const friendly = raw.includes('429') || raw.toLowerCase().includes('rate limit')
-        ? 'Rate limit hit (429). The free tier allows ~15 requests/min. Wait a moment and try again.'
-        : raw;
-      setPreviewError(friendly);
-    } else {
-      setPreviewOutput(data);
+    try {
+      const res = await fetch('/api/ai/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: previewType,
+          template:
+            previewType === 'name'
+              ? settings?.namePromptTemplate
+              : settings?.descriptionPromptTemplate,
+          tone: settings?.defaultTone,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const raw: string =
+          typeof data.error === 'string' ? data.error : `Preview failed (${res.status})`;
+        const lower = raw.toLowerCase();
+        let friendly = raw;
+        if (raw.includes('429') || lower.includes('rate limit')) {
+          friendly =
+            'Rate limit hit (429). The free tier allows ~15 requests/min. Wait a moment and try again.';
+        } else if (raw.includes('404')) {
+          friendly = `Model or endpoint not found (404). ${raw}`;
+        }
+        setPreviewError(friendly);
+      } else {
+        setPreviewOutput(data);
+      }
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : 'Preview request failed');
+    } finally {
+      setPreviewLoading(false);
     }
   }
 
@@ -160,7 +171,7 @@ export default function AIConfigPage() {
                       : 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-600'
                   }`}
                 >
-                  {p === 'groq' ? 'Groq (llama-3.3-70b)' : 'Gemini (2.0 Flash)'}
+                  {p === 'groq' ? 'Groq (gpt-oss-120b)' : 'Gemini (3.5 Flash-Lite)'}
                 </button>
               ))}
             </div>

@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { NonRetryableError, withRetry } from '@/lib/utils/retry';
 
+const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 /**
  * Calls the Google Gemini API and returns the generated text.
@@ -17,15 +18,16 @@ export async function callGemini(prompt: string, apiKey: string): Promise<string
           `${GEMINI_API_URL}?key=${apiKey}`,
           {
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 256, temperature: 0.8 },
+            // Thinking tokens count toward this budget, so leave headroom.
+            generationConfig: { maxOutputTokens: 512 },
           },
           { headers: { 'Content-Type': 'application/json' } },
         )
         .catch((err) => {
           if (axios.isAxiosError(err) && err.response) {
             const { status, data } = err.response;
-            // 400/401/403 are config errors — don't retry
-            if (status === 400 || status === 401 || status === 403) {
+            // 400/401/403/404 are config errors — don't retry
+            if (status === 400 || status === 401 || status === 403 || status === 404) {
               throw new NonRetryableError(
                 `Gemini ${status}: ${data?.error?.message ?? JSON.stringify(data)}`,
                 err,
@@ -41,5 +43,12 @@ export async function callGemini(prompt: string, apiKey: string): Promise<string
     { maxAttempts: 4, initialDelayMs: 2000, factor: 2 },
   );
 
-  return response.data.candidates[0].content.parts[0].text.trim();
+  const parts: Array<{ text?: string; thought?: boolean }> =
+    response.data.candidates?.[0]?.content?.parts ?? [];
+  const text = parts.find((p) => !p.thought && p.text)?.text;
+  if (!text) {
+    throw new Error('Gemini returned no text output.');
+  }
+
+  return text.trim();
 }
